@@ -1,31 +1,19 @@
-import os.path
-
-import yaml
-import dynamic
-import config
+import uvicorn
+from uvicorn.supervisors.watchgodreload import CustomWatcher
 
 
-def get_document():
-    with open(os.path.join(config.MAIN_DIR, 'openapi.yaml')) as f:
-        data: dict = yaml.load(f, Loader=yaml.SafeLoader)
-        return data
+_ignored = {
+    "models",
+}
 
 
-def prepare_models():
-    document: dict = get_document()
-    components: dict = document.get('components')
-    schemas: dict = components.get('schemas')
-
-    for schema in schemas:
-        name = schema
-        print(f'Name: {name}')
-        schema_object: dict = schemas.get(schema)
-        print(f'Type: {schema_object.get("type")}')
-        response_model = dynamic.DynamicResponseModels.add(name, schema_object)
-        print(f'Response model {name}: {response_model.__dict__}')
+class _WatchgodWatcher(CustomWatcher):
+    def __init__(self, *args, **kwargs):
+        self.ignored_dirs.update(_ignored)
+        super(_WatchgodWatcher, self).__init__(*args, **kwargs)
 
 
+uvicorn.supervisors.watchgodreload.CustomWatcher = _WatchgodWatcher
 
-if __name__ == '__main__':
-    prepare_models()
-
+if __name__ == "__main__":
+    uvicorn.run("generator.app:api", host="127.0.0.1", port=8000, log_level="info")
