@@ -1,10 +1,9 @@
 import importlib
 import os.path
 from pathlib import Path
-from typing import Union, List, Dict
+from typing import List
 
 import datamodel_code_generator as model_generator
-from fastapi.openapi.models import Response
 
 import config
 
@@ -24,6 +23,7 @@ def get_ref_name(ref):
 
 def get_model(ref_nam):
     return getattr(response_models, ref_nam)
+
 
 class Dynamic:
 
@@ -75,9 +75,7 @@ for path in paths:
     for method in methods:
         method_object = methods.get(method)
         if method_object:
-            # Converts responses to dicts
-            if method_object.parameters:
-                Dynamic().add_endpoint(method_object.parameters)
+            # Dynamic().add_endpoint(method_object.parameters)
 
             params = {
                 'path': path,
