@@ -59,6 +59,8 @@ for path in paths:
                 # 'status_code': response
             }
 
+            responses = {}
+
             for response in method_object.responses:
                 response_object = method_object.responses.get(response)
                 ref_name = None
@@ -66,7 +68,6 @@ for path in paths:
                     for content in response_object.content:
                         content_object = response_object.content.get(content)
                         schema = content_object.schema_
-                        responses = {}
 
                         if schema.items:
                             items_ref = schema.items.ref
@@ -80,8 +81,10 @@ for path in paths:
                         elif schema.ref:
                             responses[response] = {'model': get_model(get_ref_name(schema.ref))}
 
-                        params['responses'] = responses
                 else:
                     params['status_code'] = response
+
+            if responses:
+                params['responses'] = responses
 
             api.add_api_route(**params)
