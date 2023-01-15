@@ -23,7 +23,7 @@ def get_model(ref_nam):
     return getattr(response_models, ref_nam)
 
 async def response_data():
-    return Response(**{'dupa': 'ddd'})
+    return Response(None)
 
 
 api = FastAPI()
@@ -65,35 +65,23 @@ for path in paths:
 
             for response in method_object.responses:
                 response_object = method_object.responses.get(response)
-                description = response_object.description
-                ref_name = None
+                new_response = {
+                    'description': response_object.description
+                }
+
                 if response_object.content:
                     for content in response_object.content:
                         content_object = response_object.content.get(content)
                         schema = content_object.schema_
 
                         if schema.items:
-                            items_ref = schema.items.ref
-
-                            # if isinstance(items_ref, list):
-                            #     models = [get_model(get_ref_name(ref)) for ref in items_ref]
-                            #     responses[response] = {'model': List[Union[models]]}
-                            # else:
-                            ref_name = get_ref_name(items_ref)
-                            responses[response] = {
-                                'model': List[get_model(ref_name)],
-                                'description': description if description else NO_DESCRIPTION
-                            }
+                            ref_name = get_ref_name(schema.items.ref)
+                            new_response['model'] = List[get_model(ref_name)]
                         elif schema.ref:
-                            responses[response] = {
-                                'model': get_model(get_ref_name(schema.ref)),
-                                'description': description if description else NO_DESCRIPTION
-                            }
+                            new_response['model'] = get_model(get_ref_name(schema.ref))
 
-                else:
-                    params['status_code'] = response
+                responses[response] = new_response
 
-            if responses:
-                params['responses'] = responses
+            params['responses'] = responses
 
             api.add_api_route(**params)
