@@ -35,7 +35,6 @@ response_models = importlib.import_module('dynamic.models')
 paths = document.paths
 
 for path in paths:
-    print(path)
     path_object = paths.get(path)
     methods = {
         'get': path_object.get,
@@ -52,7 +51,14 @@ for path in paths:
         method_object = methods.get(method)
         if method_object:
             # Converts responses to dicts
-            responses = {}
+
+            params = {
+                'path': path,
+                'endpoint': response_data,
+                'methods': [method],
+                # 'status_code': response
+            }
+
             for response in method_object.responses:
                 response_object = method_object.responses.get(response)
                 ref_name = None
@@ -60,6 +66,7 @@ for path in paths:
                     for content in response_object.content:
                         content_object = response_object.content.get(content)
                         schema = content_object.schema_
+                        responses = {}
 
                         if schema.items:
                             items_ref = schema.items.ref
@@ -73,18 +80,8 @@ for path in paths:
                         elif schema.ref:
                             responses[response] = {'model': get_model(get_ref_name(schema.ref))}
 
-            params = {
-                'path': path,
-                'endpoint': response_data,
-                'methods': [method],
-                # 'status_code': response
-            }
+                        params['responses'] = responses
+                else:
+                    params['status_code'] = response
 
-            if responses:
-                params['responses'] = responses
-
-            # if ref_name:
-            #     params['response_model'] = getattr(response_models, ref_name)
-            #     print(params.get('response_model').__dict__)
             api.add_api_route(**params)
-    print(path_object)
