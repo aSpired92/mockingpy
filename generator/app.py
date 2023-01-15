@@ -13,6 +13,8 @@ from fastapi import FastAPI
 from openapi import loaders
 
 
+NO_DESCRIPTION = 'No description'
+
 def get_ref_name(ref):
     return str(ref).split('/')[-1]
 
@@ -56,13 +58,14 @@ for path in paths:
                 'path': path,
                 'endpoint': response_data,
                 'methods': [method],
-                # 'status_code': response
+                'description': method_object.description
             }
 
             responses = {}
 
             for response in method_object.responses:
                 response_object = method_object.responses.get(response)
+                description = response_object.description
                 ref_name = None
                 if response_object.content:
                     for content in response_object.content:
@@ -77,9 +80,15 @@ for path in paths:
                             #     responses[response] = {'model': List[Union[models]]}
                             # else:
                             ref_name = get_ref_name(items_ref)
-                            responses[response] = {'model': List[get_model(ref_name)]}
+                            responses[response] = {
+                                'model': List[get_model(ref_name)],
+                                'description': description if description else NO_DESCRIPTION
+                            }
                         elif schema.ref:
-                            responses[response] = {'model': get_model(get_ref_name(schema.ref))}
+                            responses[response] = {
+                                'model': get_model(get_ref_name(schema.ref)),
+                                'description': description if description else NO_DESCRIPTION
+                            }
 
                 else:
                     params['status_code'] = response
