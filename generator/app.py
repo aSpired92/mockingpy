@@ -70,8 +70,13 @@ for path in paths:
                 }
 
                 if response_object.content:
+                    new_content = {}
                     for content in response_object.content:
+                        new_content_type = {}
                         content_object = response_object.content.get(content)
+                        if content_object.example:
+                            new_content_type['example'] = content_object.example
+                            new_content[content] = new_content_type
                         schema = content_object.schema_
 
                         if schema.items:
@@ -79,6 +84,8 @@ for path in paths:
                             new_response['model'] = List[get_model(ref_name)]
                         elif schema.ref:
                             new_response['model'] = get_model(get_ref_name(schema.ref))
+
+                    new_response['content'] = new_content
 
                 responses[response] = new_response
 

@@ -108,6 +108,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+            text/html:
+              schema:
+                parameters:
+                  id:
+                    type: string
+                  value:
+                    type: string
+              example:
+                id: bar
+                value: The bar tenders
+
 components:
   schemas:
     Pet:
