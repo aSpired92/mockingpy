@@ -1,7 +1,7 @@
 import importlib
 import os.path
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Dict
 
 import datamodel_code_generator as model_generator
 from fastapi.openapi.models import Response
@@ -9,11 +9,14 @@ from fastapi.openapi.models import Response
 import config
 
 from fastapi import FastAPI
+from fastapi.openapi import models
+
 
 from openapi import loaders
 
 
 NO_DESCRIPTION = 'No description'
+
 
 def get_ref_name(ref):
     return str(ref).split('/')[-1]
@@ -22,8 +25,28 @@ def get_ref_name(ref):
 def get_model(ref_nam):
     return getattr(response_models, ref_nam)
 
-async def response_data():
-    return Response(None)
+class Dynamic:
+
+    @classmethod
+    def add_endpoint(cls, parameters: List[models.Parameter]):
+        query_params = ''
+        if parameters:
+            for param in parameters:
+                if param.in_ == models.ParameterInType.query:
+                    query_params += param.name + ','
+        local_dict = {}
+
+        code = f"""
+async def response_data({query_params}):
+    return {{'dupa': 'aaa'}}
+        """
+
+        print(code)
+
+        exec(code, globals(), local_dict)
+
+        response_data = local_dict['response_data']
+        setattr(cls, 'response_data', response_data)
 
 
 api = FastAPI()
@@ -53,12 +76,16 @@ for path in paths:
         method_object = methods.get(method)
         if method_object:
             # Converts responses to dicts
+            if method_object.parameters:
+                Dynamic().add_endpoint(method_object.parameters)
 
             params = {
                 'path': path,
-                'endpoint': response_data,
+                'endpoint': getattr(Dynamic, 'response_data'),
                 'methods': [method],
-                'description': method_object.description
+                'description': method_object.description,
+                'operation_id': method_object.operationId
+
             }
 
             responses = {}
@@ -66,7 +93,7 @@ for path in paths:
             for response in method_object.responses:
                 response_object = method_object.responses.get(response)
                 new_response = {
-                    'description': response_object.description
+                    'description': response_object.description,
                 }
 
                 if response_object.content:
