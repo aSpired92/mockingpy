@@ -1,4 +1,5 @@
 import importlib
+import json
 import os.path
 from pathlib import Path
 from typing import List
@@ -14,29 +15,8 @@ from fastapi.openapi import models
 from openapi import loaders
 
 
-class Dynamic:
-
-    @classmethod
-    def add_endpoint(cls, parameters: List[models.Parameter]):
-        query_params = ''
-        if parameters:
-            for param in parameters:
-                if param.in_ == models.ParameterInType.query:
-                    query_params += param.name + ','
-        local_dict = {}
-
-        code = f"""
-async def response_data({query_params}):
-    return {{'dupa': 'aaa'}}
-        """
-
-        print(code)
-
-        exec(code, globals(), local_dict)
-
-        response_data = local_dict['response_data']
-        setattr(cls, 'response_data', response_data)
-
+def endpoint():
+    return 'ok'
 
 api = FastAPI()
 doc_path = os.path.join(config.MAIN_DIR, 'openapi.json')
@@ -61,17 +41,19 @@ for path in paths:
     for method in methods:
         method_object = methods.get(method)
         if method_object:
-            Dynamic().add_endpoint(method_object.parameters)
 
             responses = {response: method_object.responses.get(response).dict() for response in method_object.responses}
 
             params = {
                 'path': path,
-                'endpoint': getattr(Dynamic, 'response_data'),
+                'endpoint': endpoint,
                 'methods': [method],
                 'description': method_object.description,
                 'operation_id': method_object.operationId,
-                'responses': responses
+                'responses': responses,
+                'openapi_extra': json.loads(method_object.json().replace('in_', 'in').replace('schema_', 'schema').replace('not_', 'not'))
             }
+
+            print(json.loads(method_object.json().replace('in_', 'in').replace('schema_', 'schema').replace('not_', 'not')))
 
             api.add_api_route(**params)
