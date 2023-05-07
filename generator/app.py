@@ -26,47 +26,39 @@ def endpoint(request: Request):
     """
 
     url = request.url.path
-
     main_logger.debug(url)
+    path_data = resolvers.resolve_path(paths, url)
 
-    return resolvers.resolve_path(paths, url)
-
-
-def generate_paths():
-    for path in paths:
-
-        path_object = paths.get(path)
-
-        methods = {
-            'get': path_object.get,
-            'post': path_object.post,
-            'put': path_object.put,
-            'delete': path_object.delete,
-            'options': path_object.options,
-            'head': path_object.head,
-            'patch': path_object.patch,
-            'trace': path_object.trace
-        }
-
-        for method in methods:
-
-            method_object = methods.get(method)
-
-            if method_object:
-
-                responses = {response: method_object.responses.get(response).dict() for response in method_object.responses}
-
-                params = {
-                    'path': path,
-                    'endpoint': endpoint,
-                    'methods': [method],
-                    'description': method_object.description,
-                    'operation_id': method_object.operationId,
-                    'responses': responses,
-                    'openapi_extra': json.loads(method_object.json().replace('in_', 'in').replace('schema_', 'schema').replace('not_', 'not'))
-                }
-
-                api.add_api_route(**params)
+    return path_data
 
 
-generate_paths()
+for path, path_object in paths.items():
+
+    methods = {
+        'get': path_object.get,
+        'post': path_object.post,
+        'put': path_object.put,
+        'delete': path_object.delete,
+        'options': path_object.options,
+        'head': path_object.head,
+        'patch': path_object.patch,
+        'trace': path_object.trace
+    }
+
+    for method, method_object in methods.items():
+
+        if method_object:
+
+            responses = {response: method_object.responses.get(response).dict() for response in method_object.responses}
+
+            params = {
+                'path': path,
+                'endpoint': endpoint,
+                'methods': [method],
+                'description': method_object.description,
+                'operation_id': method_object.operationId,
+                'responses': responses,
+                'openapi_extra': json.loads(method_object.json().replace('in_', 'in').replace('schema_', 'schema').replace('not_', 'not'))
+            }
+
+            api.add_api_route(**params)
