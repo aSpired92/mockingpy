@@ -1,18 +1,15 @@
 import json
-import os.path
+import pathlib
 
 import config
 
 from fastapi import FastAPI, Request
-
 from openapi import loaders, resolvers
 
-
-
 api = FastAPI()
-doc_path = os.path.join(config.MAIN_DIR, 'openapi.json')
-document = loaders.DocumentLoader.load(doc_path)
 
+doc_path = pathlib.Path(config.MAIN_DIR, 'openapi.json')
+document = loaders.DocumentLoader.load(doc_path)
 
 paths = document.paths
 
