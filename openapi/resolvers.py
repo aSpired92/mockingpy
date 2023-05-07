@@ -1,4 +1,8 @@
+import re
+
 import jsonref
+
+from loggers import main_logger
 
 
 def resolve_refs(uri):
@@ -7,24 +11,24 @@ def resolve_refs(uri):
 
 
 def resolve_path(paths, url):
+    """
+    Wyszukuje ścieżkę z dokumentacji na bazie podanego adresu
 
-    url_parts = url.split('/')
+    :param paths: lista ścieżek do przeszukania
+    :param url: adres
+    :return: Obiekt ścieżki
+    """
 
-    for path in paths:
-        path_parts = path.split('/')
-        path_object = paths.get(path)
+    # szukamy odpowiedniej ścieżki po adresie
+    for path, path_object in paths.items():
+        main_logger.debug(path)
 
-        if len(path_parts) == len(url_parts):
-            print(url_parts)
-            print(path_parts)
-            for i in range(len(path_parts)):
-                path_part: str = path_parts[i]
-                url_part: str = url_parts[i]
-                if path_part.startswith('{') and path_part.endswith('}'):
-                    continue
-                if path_part != url_part:
-                    print('wrong')
-                    break
+        # jeśli ścieżka zawiera parametry, to je zastępujemy regexem
+        regex_path = re.sub('{.*?}', '.+', path, flags=re.DOTALL).replace('/', '\\/')
 
+        main_logger.debug(regex_path)
+        if re.match(f'{regex_path}', url):
+            return path_object
 
-    return paths.get(url)
+    # jeśli nie znaleziono odpowiedniej ścieżki, zwracamy None
+    return None

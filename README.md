@@ -1,3 +1,3 @@
 # mockingpy
 
-Python mocking server based on FastApi and Faker
+Python (3.11) mocking server based on FastApi and Faker

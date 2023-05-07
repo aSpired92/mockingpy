@@ -4,27 +4,32 @@ import pathlib
 import config
 
 from fastapi import FastAPI, Request
+
+from loggers import main_logger
 from openapi import loaders, resolvers
 
+# Główna instancja API, do której dodawane są endpoint-y
 api = FastAPI()
 
+# Ładowanie dokumentu
 doc_path = pathlib.Path(config.MAIN_DIR, 'openapi.json')
-document = loaders.DocumentLoader.load(doc_path)
+document = loaders.load_document(doc_path)
 
 paths = document.paths
 
 
 def endpoint(request: Request):
+    """
+    Uniwersalna metoda endpoint-a, która wyszukuje wołaną ścieżkę i generuje odpowiedź złożoną z losowych danych
+    :param request: wbudowany parametr
+    :return:
+    """
 
     url = request.url.path
 
-    if request.path_params:
-        filtered_paths = {key: paths.get(key) for key in paths if paths.get(key).dict().get(request.method.lower())}
-        path_object = resolvers.resolve_path(filtered_paths, url)
-    else:
-        path_object = paths.get(url)
+    main_logger.debug(url)
 
-    return path_object
+    return resolvers.resolve_path(paths, url)
 
 
 def generate_paths():
