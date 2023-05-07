@@ -1,30 +1,30 @@
-import os
-import typing
-
-from fastapi.openapi import models
-
-from openapi.loaders import DocumentLoader
+import jsonref
 
 
-class Ref:
+def resolve_refs(uri):
+    with open(uri) as fp:
+        return jsonref.load(fp, loader=jsonref.jsonloader)
 
-    def __init__(self, ref: str, referrer_path: str):
-        self.ref = ref
-        self.referrer = referrer_path
 
-    def resolve(self) -> models.Schema:
-        ref_parts = self.ref.split('#')
-        temp_path = self.referrer
-        if ref_parts[0]:
-            for module in ref_parts[0].split('/'):
-                temp_path = os.path.join(temp_path, module)
-        current_object = DocumentLoader.load(temp_path)
-        for module in ref_parts[1].split('/'):
-            if module:
-                if type(current_object) == dict:
-                    current_object = current_object.get(module)
-                else:
-                    current_object = getattr(current_object, module)
-        print(current_object)
-        return current_object
+def resolve_path(paths, url):
 
+    url_parts = url.split('/')
+
+    for path in paths:
+        path_parts = path.split('/')
+        path_object = paths.get(path)
+
+        if len(path_parts) == len(url_parts):
+            print(url_parts)
+            print(path_parts)
+            for i in range(len(path_parts)):
+                path_part: str = path_parts[i]
+                url_part: str = url_parts[i]
+                if path_part.startswith('{') and path_part.endswith('}'):
+                    continue
+                if path_part != url_part:
+                    print('wrong')
+                    break
+
+
+    return paths.get(url)
