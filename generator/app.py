@@ -1,64 +1,37 @@
-import json
 import pathlib
 
 import config
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 
-from loggers import main_logger
-from openapi import loaders, resolvers
+from generator import dynamic
+from openapi import loaders, resolvers, utils
 
 # Główna instancja API, do której dodawane są endpoint-y
 api = FastAPI()
 
-# Ładowanie dokumentu
+# Ładowanie dokumentacji
 doc_path = pathlib.Path(config.MAIN_DIR, 'openapi.json')
 document = loaders.load_document(doc_path)
 
-paths = document.paths
+for path, path_object in document.paths.items():
 
-
-def endpoint(request: Request):
-    """
-    Uniwersalna metoda endpoint-a, która wyszukuje wołaną ścieżkę i generuje odpowiedź złożoną z losowych danych
-    :param request: wbudowany parametr
-    :return:
-    """
-
-    url = request.url.path
-    main_logger.debug(url)
-    path_data = resolvers.resolve_path(paths, url)
-
-    return path_data
-
-
-for path, path_object in paths.items():
-
-    methods = {
-        'get': path_object.get,
-        'post': path_object.post,
-        'put': path_object.put,
-        'delete': path_object.delete,
-        'options': path_object.options,
-        'head': path_object.head,
-        'patch': path_object.patch,
-        'trace': path_object.trace
-    }
+    methods = resolvers.resolve_methods(path_object)
 
     for method, method_object in methods.items():
 
-        if method_object:
+        endpoint = dynamic.generate_endpoint(method_object)
 
-            responses = {response: method_object.responses.get(response).dict() for response in method_object.responses}
+        # Konwertuje wszystkie możliwe odpowiedzi do typu dict
+        responses = {response: method_object.responses.get(response).dict() for response in method_object.responses}
 
-            params = {
-                'path': path,
-                'endpoint': endpoint,
-                'methods': [method],
-                'description': method_object.description,
-                'operation_id': method_object.operationId,
-                'responses': responses,
-                'openapi_extra': json.loads(method_object.json().replace('in_', 'in').replace('schema_', 'schema').replace('not_', 'not'))
-            }
-
-            api.add_api_route(**params)
+        # Dodaje ścieżkę do API
+        api.add_api_route(
+            path=path,
+            endpoint=endpoint,
+            methods=[method],
+            description=method_object.description,
+            operation_id=method_object.operationId,
+            responses=responses,
+            openapi_extra=utils.model_to_dict(method_object),
+        )
