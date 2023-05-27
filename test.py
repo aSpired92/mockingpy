@@ -54,3 +54,5 @@ class TestDataGeneration(unittest.TestCase):
                                 else:
                                     self.assertGreaterEqual(result, minimum, error_message)
 
+if __name__ == '__main__':
+    unittest.main()
