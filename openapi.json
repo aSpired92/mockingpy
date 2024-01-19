@@ -6,10 +6,49 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8000"
+      "url": "http://localhost:8055"
     }
   ],
   "paths": {
+    "/number": {
+      "get": {
+        "summary": "Liczba",
+        "responses": {
+          "200": {
+            "description": "Liczba",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number",
+                  "maximum": 5,
+                  "minimum": -200,
+                  "multipleOf": 3.5
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/text": {
+      "get": {
+        "summary": "Tekst",
+        "responses": {
+          "200": {
+            "description": "Liczba",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 20,
+                  "maxLength": 30
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users": {
       "get": {
         "summary": "Pobierz użytkowników",

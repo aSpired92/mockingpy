@@ -2,7 +2,7 @@ import random
 
 from fastapi.openapi import models
 
-from openapi.datatypes import Int32, Int64, Float, Double, get_type_by_name
+from openapi.datatypes import Int32, Int64, Float, Double
 
 
 

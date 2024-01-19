@@ -10,6 +10,9 @@ from loggers import main_logger
 from openapi.datatypes import Integer, Int32, Int64, Float, Double, Number, String, Date, DateTime, Password, Byte, \
     Binary
 
+# TODO: logger with data information
+# TODO: use enum for match case data type
+
 
 def generate_endpoint(method_object):
     """
@@ -47,8 +50,10 @@ def generate_endpoint(method_object):
                 return None
 
             match response_type:
-                case 'integer', 'number':
+                case 'integer' | 'number':
                     return _generate_numeric(schema)
+                case 'string':
+                    return _generate_string(schema)
                 case _:
                     raise RuntimeError(f'Unknown response type: {response_type}')
 
@@ -73,9 +78,11 @@ def _generate_string(schema: models.Schema):
     maximum = schema.maxLength or None
 
     if maximum and not minimum:
-        rstr.rstr(data_type.characters, maximum)
-    else:
-        rstr.rstr(data_type.characters, minimum, maximum)
+        return rstr.rstr(data_type.characters, maximum)
+    elif maximum and minimum:
+        return rstr.rstr(data_type.characters, minimum, maximum)
+
+    return rstr.rstr(data_type.characters)
 
 
 def _generate_numeric(schema: models.Schema):
@@ -114,6 +121,8 @@ def _generate_numeric(schema: models.Schema):
         case _:
             raise RuntimeError(f'Unknown response type: {schema.type}')
 
+    print(step)
+
     if schema.minimum is not None:
         minimum = Decimal(schema.minimum)
         if schema.exclusiveMinimum:
@@ -128,15 +137,9 @@ def _generate_numeric(schema: models.Schema):
     else:
         maximum = data_type.max
 
-    print(minimum)
-    print(maximum)
-
-    multiple_of = Decimal(schema.multipleOf) or step
+    multiple_of = Decimal(schema.multipleOf or step)
 
     minimum = math.ceil(minimum / multiple_of) * multiple_of
     maximum = math.floor(maximum / multiple_of) * multiple_of
 
-    print(minimum)
-    print(maximum)
-
-    return data_type(calculate(minimum, maximum, multiple_of))
+    return calculate(minimum, maximum, multiple_of)
