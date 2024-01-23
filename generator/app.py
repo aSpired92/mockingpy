@@ -1,19 +1,15 @@
-import pathlib
-
-import config
-
 from fastapi import FastAPI
 
 from generator import dynamic
 from openapi import loaders, resolvers, utils
 
-# Główna instancja API, do której dodawane są endpoint-y
+# The main API instance to which endpoints are added
 api = FastAPI()
 
-# Ładowanie dokumentacji
-doc_path = pathlib.Path(config.MAIN_DIR, 'openapi.json')
-document = loaders.load_document(doc_path)
+# Documentation loading
+document = loaders.load_document()
 
+# For each method (get, post etc.) for each path generates route with endpoint and adds it to the API
 for path, path_object in document.paths.items():
 
     methods = resolvers.resolve_methods(path_object)
@@ -22,10 +18,10 @@ for path, path_object in document.paths.items():
 
         endpoint = dynamic.generate_endpoint(method_object)
 
-        # Konwertuje wszystkie możliwe odpowiedzi do typu dict
+        # Converts all possible answers to dict type
         responses = {response: method_object.responses.get(response).dict() for response in method_object.responses}
 
-        # Dodaje ścieżkę do API
+        # Adds a path to the API
         api.add_api_route(
             path=path,
             endpoint=endpoint,
