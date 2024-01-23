@@ -4,6 +4,12 @@ Python 3.11 mocking server based on FastApi and OpenAPI libraries
 
 ## Usage
 
+To install project requirements:
+```shell
+pip install -r requirements.txt
+```
+
+To run the server
 ```shell
 python main.py -p path/to/openapi/document [OPTIONS]
 ```
