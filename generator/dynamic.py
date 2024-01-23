@@ -9,23 +9,24 @@ from fastapi.openapi import models
 from loggers import main_logger
 from openapi.datatypes import Integer, Int32, Int64, Float, Double, Number, String, Date, DateTime, Password, Byte, \
     Binary
+from openapi.enums import ResponseType
 
-# TODO: logger with data information
-# TODO: use enum for match case data type
+
+# TODO: Add logger with data information
+# TODO: Add support for other statuses (400, 404, etc.)
+# TODO: Add command arguments (nullable, errors)
+
 
 
 def generate_endpoint(method_object):
     """
-    Generuje klasę z metodą, której można użyć jako 'endpoint' przy dodawaniu ścieżki do API.
-    Metoda jest w klasie _Dynamo, aby można było zapisać obiekt operacji, na którym ta metoda bazuje
-
-    :param method_object: Obiekt operacji z dokumentacji API
-    :return: Zwraca funkcję z instancji klasy
+    Generates a class with a method that can be used as an 'endpoint' parameter when adding a path to the API.
+    The method is in the _Dynamo class so that you can save the operation object on which the method is based
     """
 
     class _Dynamo:
         """
-        (TO ŻYJE :D)
+        It's alive :D
         """
 
         def __init__(self):
@@ -33,8 +34,8 @@ def generate_endpoint(method_object):
 
         def endpoint(self):
             """
-            Uniwersalna metoda endpoint-a, która na bazie obiektu operacji generuje losowe dane według schematu
-            :return: Zwraca losowe dane
+            A universal endpoint method that generates random data based on the operation object according to the scheme
+            :return: Returns random data
             """
 
             operation = self.method_object
@@ -44,20 +45,28 @@ def generate_endpoint(method_object):
             application_json = content.get("application/json")
 
             schema: models.Schema = application_json.schema_
-            response_type = schema.type
 
             if schema.nullable:
                 return None
 
-            match response_type:
-                case 'integer' | 'number':
-                    return _generate_numeric(schema)
-                case 'string':
-                    return _generate_string(schema)
-                case _:
-                    raise RuntimeError(f'Unknown response type: {response_type}')
+            return _generate_response(schema)
 
     return _Dynamo().endpoint
+
+
+def _generate_response(schema: models.Schema):
+    response_type = schema.type
+    match response_type:
+        case ResponseType.INTEGER.value | ResponseType.NUMBER.value:
+            return _generate_numeric(schema)
+        case ResponseType.STRING.value:
+            return _generate_string(schema)
+        case ResponseType.OBJECT.value:
+            return _generate_object(schema)
+        case ResponseType.ARRAY.value:
+            return _generate_array(schema)
+        case _:
+            raise RuntimeError(f'Unknown response type: {response_type}')
 
 
 def _generate_string(schema: models.Schema):
@@ -83,6 +92,14 @@ def _generate_string(schema: models.Schema):
         return rstr.rstr(data_type.characters, minimum, maximum)
 
     return rstr.rstr(data_type.characters)
+
+
+def _generate_object(schema: models.Schema):
+    return {key: _generate_response(schema_object) for key, schema_object in schema.properties.items()}
+
+
+def _generate_array(schema: models.Schema):
+    return [_generate_response(schema.items) for _ in list(range(random.randrange(3, 10)))]
 
 
 def _generate_numeric(schema: models.Schema):
