@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Przykładowe API",
+    "title": "API Example",
     "version": "1.0.0"
   },
   "servers": [
@@ -12,15 +12,15 @@
   "paths": {
     "/number": {
       "get": {
-        "summary": "Liczba",
+        "summary": "Number",
         "responses": {
           "200": {
-            "description": "Liczba",
+            "description": "Number",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "number",
-                  "maximum": 5,
+                  "maximum": 200,
                   "minimum": -200,
                   "multipleOf": 3.5
                 }
@@ -32,16 +32,16 @@
     },
     "/text": {
       "get": {
-        "summary": "Tekst",
+        "summary": "Text",
         "responses": {
           "200": {
-            "description": "Liczba",
+            "description": "Text",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "string",
-                  "minLength": 20,
-                  "maxLength": 30
+                  "minLength": 10,
+                  "maxLength": 20
                 }
               }
             }
@@ -49,119 +49,57 @@
         }
       }
     },
-    "/users": {
+    "/regex": {
       "get": {
-        "summary": "Pobierz użytkowników",
+        "summary": "Regex",
         "responses": {
           "200": {
-            "description": "Lista użytkowników",
+            "description": "Regex",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-z]{7}\\@[a-z]{5}\\.com$"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/array": {
+      "get": {
+        "summary": "Array",
+        "responses": {
+          "200": {
+            "description": "Array",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/User"
+                    "$ref": "#/components/schemas/Object"
                   }
                 }
               }
             }
           }
         }
-      },
-      "post": {
-        "summary": "Dodaj użytkownika",
-        "requestBody": {
-          "description": "Dane użytkownika",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/User"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Użytkownik został dodany",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              }
-            }
-          }
-        }
       }
     },
-    "/users/{id}": {
+    "/object": {
       "get": {
-        "summary": "Pobierz użytkownika o podanym identyfikatorze",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "Identyfikator użytkownika",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
+        "summary": "Object",
         "responses": {
           "200": {
-            "description": "Użytkownik o podanym identyfikatorze",
+            "description": "Object",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/Object"
                 }
               }
             }
-          },
-          "404": {
-            "description": "Użytkownik o podanym identyfikatorze nie istnieje"
-          }
-        }
-      },
-      "put": {
-        "summary": "Zaktualizuj użytkownika o podanym identyfikatorze",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "Identyfikator użytkownika",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Dane użytkownika",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/User"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Użytkownik został zaktualizowany",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Użytkownik o podanym identyfikatorze nie istnieje"
           }
         }
       }
@@ -169,26 +107,28 @@
   },
   "components": {
     "schemas": {
-      "User": {
+      "Object": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
             "format": "int64",
             "minimum": 1,
-            "maximum": 1,
-            "exclusiveMinimum": true
+            "maximum": 5
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Z]{1}[a-z]{7} [A-Z]{1}[a-z]{5}$"
           },
           "email": {
             "type": "string",
-            "format": "email"
+            "pattern": "^[a-z]{7}/@[a-z]{5}/.com$"
           },
           "age": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "minimum": 20,
+            "maximum": 70
           }
         },
         "required": [
